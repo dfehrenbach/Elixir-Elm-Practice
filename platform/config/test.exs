@@ -12,8 +12,8 @@ config :logger, level: :warn
 # Configure your database
 config :platform, Platform.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "platform_test",
+  username: "dfehr1",
+  password: "admin",
+  database: "Elixir-Elm-Practice",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox

@@ -53,6 +53,6 @@ config :platform, Platform.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "dfehr1",
   password: "admin",
-  database: "Elixir-Practice",
+  database: "Elixir-Elm-Practice",
   hostname: "localhost",
   pool_size: 10
