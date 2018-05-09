@@ -14,6 +14,9 @@ config :platform, Platform.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "dfehr1",
   password: "admin",
-  database: "Elixir-Elm-Practice",
+  database: "Elixir-Elm-Practice-Test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+# Reduce bcrypt rounds to speed up tests
+config :bcrypt_elixir, :log_rounds, 4
