@@ -212,14 +212,21 @@ gamesIndex model =
 
 gamesList : List Game -> Html Msg
 gamesList games =
-    ul [ class "games-list" ] (List.map gamesListItem games)
+    ul [ class "games-list media-list" ] (List.map gamesListItem games)
 
 
 gamesListItem : Game -> Html Msg
 gamesListItem game =
-    li [ class "game-item" ]
-        [ strong [] [ text game.title ]
-        , p [] [ text game.description ]
+    a [ href "#" ]
+        [ li [ class "game-item media" ]
+            [ div [ class "media-left" ]
+                [ img [ class "media-object", src game.thumbnail ] []
+                ]
+            , div [ class "media-body media-middle" ]
+                [ h4 [ class "media-heading" ] [ text game.title ]
+                , p [] [ text game.description ]
+                ]
+            ]
         ]
 
 
@@ -241,7 +248,10 @@ playersSortedByScore =
 
 playersList : List Player -> Html Msg
 playersList players =
-    ul [ class "players-list" ] (List.map playersListItem players)
+    div [ class "players-list panel panel-info" ]
+        [ div [ class "panel-heading" ] [ text "Leaderboard" ]
+        , ul [ class "players-list" ] (List.map playersListItem players)
+        ]
 
 
 playersListItem : Player -> Html Msg
@@ -252,10 +262,13 @@ playersListItem player =
                 player.username
             else
                 Maybe.withDefault "" player.displayName
+
+        playerLink =
+            "players/" ++ (toString player.id)
     in
-        li [ class "player-item" ]
-            [ strong [] [ text displayName ]
-            , p [] [ text (toString player.score) ]
+        li [ class "player-item list-group-item" ]
+            [ strong [] [ a [ href playerLink ] [ text displayName ] ]
+            , span [ class "badge" ] [ text (toString player.score) ]
             ]
 
 
