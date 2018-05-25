@@ -12,13 +12,21 @@ import Time exposing (Time, every, second)
 -- MODEL
 
 
+type GameState
+    = StartScreen
+    | Playing
+    | Success
+    | GameOver
+
+
 type Direction
     = Left
     | Right
 
 
 type alias Model =
-    { characterDirection : Direction
+    { gameState : GameState
+    , characterDirection : Direction
     , characterPositionX : Int
     , characterPositionY : Int
     , itemPositionX : Int
@@ -31,7 +39,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { characterDirection = Right
+    { gameState = StartScreen
+    , characterDirection = Right
     , characterPositionX = 50
     , characterPositionY = 300
     , itemPositionX = 500
@@ -73,11 +82,15 @@ update msg model =
                   }
                 , Random.generate SetNewItemPositionX (Random.int 50 500)
                 )
+            else if model.itemsCollected >= 10 then
+                ( { model | gameState = Success }, Cmd.none )
+            else if model.itemsCollected < 10 && model.timeRemaining == 0 then
+                ( { model | gameState = GameOver }, Cmd.none )
             else
                 ( model, Cmd.none )
 
         CountdownTimer time ->
-            if model.timeRemaining > 0 then
+            if model.gameState == Playing && model.timeRemaining > 0 then
                 ( { model | timeRemaining = model.timeRemaining - 1 }, Cmd.none )
             else
                 ( model, Cmd.none )
@@ -87,21 +100,35 @@ update msg model =
 
         KeyDown keyCode ->
             case keyCode of
+                32 ->
+                    case model.gameState of
+                        StartScreen ->
+                            ( { model | gameState = Playing }, Cmd.none )
+
+                        _ ->
+                            ( initialModel, Cmd.none )
+
                 37 ->
-                    ( { model
-                        | characterDirection = Left
-                        , characterPositionX = model.characterPositionX - 15
-                      }
-                    , Cmd.none
-                    )
+                    if model.gameState == Playing then
+                        ( { model
+                            | characterDirection = Left
+                            , characterPositionX = model.characterPositionX - 15
+                          }
+                        , Cmd.none
+                        )
+                    else
+                        ( model, Cmd.none )
 
                 39 ->
-                    ( { model
-                        | characterDirection = Right
-                        , characterPositionX = model.characterPositionX + 15
-                      }
-                    , Cmd.none
-                    )
+                    if model.gameState == Playing then
+                        ( { model
+                            | characterDirection = Right
+                            , characterPositionX = model.characterPositionX + 15
+                          }
+                        , Cmd.none
+                        )
+                    else
+                        ( model, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -129,18 +156,52 @@ view model =
     div [] [ viewGame model ]
 
 
+viewGameState : Model -> List (Svg Msg)
+viewGameState model =
+    case model.gameState of
+        StartScreen ->
+            [ viewGameWindow
+            , viewGameSky
+            , viewGameGround
+            , viewGameCharacter model
+            , viewItem model
+            , viewStartScreenText
+            ]
+
+        Playing ->
+            [ viewGameWindow
+            , viewGameSky
+            , viewGameGround
+            , viewGameCharacter model
+            , viewItem model
+            , viewGameScore model
+            , viewItemsCollected model
+            , viewGameTime model
+            ]
+
+        Success ->
+            [ viewGameWindow
+            , viewGameSky
+            , viewGameGround
+            , viewGameCharacter model
+            , viewItem model
+            , viewSuccessScreenText
+            ]
+
+        GameOver ->
+            [ viewGameWindow
+            , viewGameSky
+            , viewGameGround
+            , viewGameCharacter model
+            , viewItem model
+            , viewGameOverText
+            ]
+
+
 viewGame : Model -> Svg Msg
 viewGame model =
     svg [ version "1.1", width "600", height "400" ]
-        [ viewGameWindow
-        , viewGameSky
-        , viewGameGround
-        , viewGameCharacter model
-        , viewItem model
-        , viewGameScore model
-        , viewItemsCollected model
-        , viewGameTime model
-        ]
+        (viewGameState model)
 
 
 viewGameWindow : Svg Msg
@@ -164,6 +225,28 @@ viewGameText positionX positionY str =
         , fontSize "16"
         ]
         [ Svg.text str ]
+
+
+viewStartScreenText : Svg Msg
+viewStartScreenText =
+    Svg.svg []
+        [ viewGameText 140 160 "Collect ten coins in ten seconds!"
+        , viewGameText 140 180 "Press the SPACE BAR key to restart"
+        ]
+
+
+viewSuccessScreenText : Svg Msg
+viewSuccessScreenText =
+    Svg.svg []
+        [ viewGameText 260 180 "Success!" ]
+
+
+viewGameOverText : Svg Msg
+viewGameOverText =
+    Svg.svg []
+        [ viewGameText 260 160 "Game Over"
+        , viewGameText 140 180 "Press the SPACE BAR key to restart."
+        ]
 
 
 viewGameScore : Model -> Svg Msg
