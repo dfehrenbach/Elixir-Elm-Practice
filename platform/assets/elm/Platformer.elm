@@ -1,9 +1,12 @@
 module Platformer exposing (..)
 
+import AnimationFrame exposing (diffs)
 import Html exposing (Html, div)
 import Keyboard exposing (KeyCode, downs)
+import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Time exposing (Time)
 
 
 -- MODEL
@@ -45,6 +48,8 @@ init =
 type Msg
     = NoOp
     | KeyDown KeyCode
+    | TimeUpdate Time
+    | SetNewItemPositionX Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -52,6 +57,15 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        TimeUpdate time ->
+            if characterFoundItem model then
+                ( model, Random.generate SetNewItemPositionX (Random.int 50 500) )
+            else
+                ( model, Cmd.none )
+
+        SetNewItemPositionX newPositionX ->
+            ( { model | itemPositionX = newPositionX }, Cmd.none )
 
         KeyDown keyCode ->
             case keyCode of
@@ -81,7 +95,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch [ downs KeyDown ]
+    Sub.batch [ downs KeyDown, diffs TimeUpdate ]
 
 
 
@@ -162,29 +176,24 @@ viewGameCharacter model =
 
 viewItem : Model -> Svg Msg
 viewItem model =
-    case characterFoundItem model of
-        True ->
-            svg [] []
-
-        False ->
-            image
-                [ xlinkHref "/images/dogeCoin.svg"
-                , x (toString model.itemPositionX)
-                , y (toString model.itemPositionY)
-                , width "20"
-                , height "20"
-                ]
-                []
+    image
+        [ xlinkHref "/images/dogeCoin.svg"
+        , x (toString model.itemPositionX)
+        , y (toString model.itemPositionY)
+        , width "20"
+        , height "20"
+        ]
+        []
 
 
 characterFoundItem : Model -> Bool
 characterFoundItem model =
     let
         approximateItemLowerBound =
-            model.itemPositionX - 30
+            model.itemPositionX - 35
 
         approximateItemUpperBound =
-            model.itemPositionX + 5
+            model.itemPositionX + 10
 
         approximateItemRange =
             List.range approximateItemLowerBound approximateItemUpperBound
