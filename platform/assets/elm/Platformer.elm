@@ -1,6 +1,7 @@
 module Platformer exposing (..)
 
-import Html exposing (Html, div, text)
+import Html exposing (Html, div)
+import Keyboard exposing (KeyCode, downs)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
@@ -8,8 +9,14 @@ import Svg.Attributes exposing (..)
 -- MODEL
 
 
+type Direction
+    = Left
+    | Right
+
+
 type alias Model =
-    { characterPositionX : Int
+    { characterDirection : Direction
+    , characterPositionX : Int
     , characterPositionY : Int
     , itemPositionX : Int
     , itemPositionY : Int
@@ -18,7 +25,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { characterPositionX = 50
+    { characterDirection = Right
+    , characterPositionX = 50
     , characterPositionY = 300
     , itemPositionX = 500
     , itemPositionY = 300
@@ -36,6 +44,7 @@ init =
 
 type Msg
     = NoOp
+    | KeyDown KeyCode
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -44,6 +53,27 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        KeyDown keyCode ->
+            case keyCode of
+                37 ->
+                    ( { model
+                        | characterDirection = Left
+                        , characterPositionX = model.characterPositionX - 15
+                      }
+                    , Cmd.none
+                    )
+
+                39 ->
+                    ( { model
+                        | characterDirection = Right
+                        , characterPositionX = model.characterPositionX + 15
+                      }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS
@@ -51,7 +81,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Sub.batch [ downs KeyDown ]
 
 
 
@@ -111,26 +141,55 @@ viewGameGround =
 
 viewGameCharacter : Model -> Svg Msg
 viewGameCharacter model =
-    image
-        [ xlinkHref "/images/Panda.gif"
-        , x (toString model.characterPositionX)
-        , y (toString model.characterPositionY)
-        , width "50"
-        , height "50"
-        ]
-        []
+    let
+        pandaImage =
+            case model.characterDirection of
+                Right ->
+                    "/images/pandaRight.png"
+
+                Left ->
+                    "/images/pandaLeft.png"
+    in
+        image
+            [ xlinkHref pandaImage
+            , x (toString model.characterPositionX)
+            , y (toString model.characterPositionY)
+            , width "50"
+            , height "50"
+            ]
+            []
 
 
 viewItem : Model -> Svg Msg
 viewItem model =
-    image
-        [ xlinkHref "/images/dogeCoin.svg"
-        , x (toString model.itemPositionX)
-        , y (toString model.itemPositionY)
-        , width "20"
-        , height "20"
-        ]
-        []
+    case characterFoundItem model of
+        True ->
+            svg [] []
+
+        False ->
+            image
+                [ xlinkHref "/images/dogeCoin.svg"
+                , x (toString model.itemPositionX)
+                , y (toString model.itemPositionY)
+                , width "20"
+                , height "20"
+                ]
+                []
+
+
+characterFoundItem : Model -> Bool
+characterFoundItem model =
+    let
+        approximateItemLowerBound =
+            model.itemPositionX - 30
+
+        approximateItemUpperBound =
+            model.itemPositionX + 5
+
+        approximateItemRange =
+            List.range approximateItemLowerBound approximateItemUpperBound
+    in
+        List.member model.characterPositionX approximateItemRange
 
 
 main : Program Never Model Msg
