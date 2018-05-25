@@ -35,6 +35,7 @@
                         'Elixir.PlatformWeb.PlayerView',
                         'Elixir.PlatformWeb.Router',
                         'Elixir.PlatformWeb.Router.Helpers',
+                        'Elixir.PlatformWeb.ScoreChannel',
                         'Elixir.PlatformWeb.UserSocket']},
               {registered,[]},
               {vsn,"0.0.1"},
